@@ -2,7 +2,7 @@ from cv2 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from tensorflow.keras.models import load_model
-
+import pytesseract 
 def convertImg2Binary(img, dilate=True):
     # converting img to grayscale
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -64,6 +64,40 @@ def applyTransformations(img):
     
     return result
 
+def scale_and_centre(img, size, margin=0, background=0):
+	"""Scales and centres an image onto a new background square."""
+	h, w = img.shape[:2]
+
+	def centre_pad(length):
+		"""Handles centering for a given length that may be odd or even."""
+		if length % 2 == 0:
+			side1 = int((size - length) / 2)
+			side2 = side1
+		else:
+			side1 = int((size - length) / 2)
+			side2 = side1 + 1
+		return side1, side2
+
+	def scale(r, x):
+		return int(r * x)
+
+	if h > w:
+		t_pad = int(margin / 2)
+		b_pad = t_pad
+		ratio = (size - margin) / h
+		w, h = scale(ratio, w), scale(ratio, h)
+		l_pad, r_pad = centre_pad(w)
+	else:
+		l_pad = int(margin / 2)
+		r_pad = l_pad
+		ratio = (size - margin) / w
+		w, h = scale(ratio, w), scale(ratio, h)
+		t_pad, b_pad = centre_pad(h)
+
+	img = cv2.resize(img, (w, h))
+	img = cv2.copyMakeBorder(img, t_pad, b_pad, l_pad, r_pad, cv2.BORDER_CONSTANT, None, background)
+	return cv2.resize(img, (size, size))
+
 def findDigits(img, puzzle_size=9):
     res_size = 28
     row_size = int(450 / puzzle_size)
@@ -113,8 +147,17 @@ def findDigits(img, puzzle_size=9):
                     if digit[y, x] == 64 and x < row_size and y < col_size:
                         cv2.floodFill(digit, mask, (x, y), 0)
 
-            res = cv2.resize(digit, (res_size, res_size))
-            
+            if digit_rect is not None:
+                x, y, w, h = digit_rect
+                digit = digit[y:y+h, x:x+w]
+                if w > 0 and h > 0 and (w*h) > 100 and len(digit):
+                    res = scale_and_centre(digit, res_size, 4)
+                else:
+                    res = np.zeros((res_size, res_size))
+            else:
+                res = np.zeros((res_size, res_size)) 
+
+            res = cv2.bitwise_not(res)
             result[i*res_size:(i + 1)*res_size, j*res_size:(j + 1)*res_size] = res
 
     return result
