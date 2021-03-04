@@ -3,7 +3,7 @@ from cv2 import cv2
 import numpy as np
 from sudoku import *
 
-st.title("Sudoku Solver using OpenCV, Deep Learning and Python")
+st.title("Sudoku Solver using OpenCV, Deep Learning CNN using Python, Tensorflow and Keras")
 uploaded_file = st.file_uploader("Pick a file")
 
 if uploaded_file is not None:
