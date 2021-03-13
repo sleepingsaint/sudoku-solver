@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tensorflow.keras.models import load_model
 import pytesseract 
+
 def convertImg2Binary(img, dilate=True):
     # converting img to grayscale
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -48,8 +49,8 @@ def plot_sudoku_vertices(img, vertices):
     cv2.circle(img_rgb, tuple(vertices[2]), 10, (255, 0, 0), -1)
     cv2.circle(img_rgb, tuple(vertices[3]), 10, (255, 0, 0), -1)
 
-    return img_rgb
-    
+    return img_rgb   
+
 def applyTransformations(img):
     proc = convertImg2Binary(img)
 
@@ -61,7 +62,7 @@ def applyTransformations(img):
     # converting vertices into new vertices
     matrix = cv2.getPerspectiveTransform(vertices, new_vertices)
     result = cv2.warpPerspective(img, matrix, (450, 450))
-    
+
     return result
 
 def scale_and_centre(img, size, margin=0, background=0):
